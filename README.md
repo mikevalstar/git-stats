@@ -1,6 +1,9 @@
 # Git Stats
 
-A quick script to get some stats about your git repository.
+Quickly generate a git stats page that shows:
+
+- Lines of code over time by file type
+- Lines of comments over time by file type
 
 ## Usage
 

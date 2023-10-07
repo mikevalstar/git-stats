@@ -2,23 +2,79 @@
 
 var ctx = document.getElementById('chart').getContext('2d');
 
-async function renderChart(data) {
-  // json data
-  var data = await data.json();
+let data = null;
+let chart = null;
 
+async function setData(incoming) {
+  data = await incoming.json();
+}
+
+function dataSetParse() {
+  const selectedItems = document.querySelectorAll(
+    '#chart-options input:checked'
+  );
+
+  let dataSet = {};
+  if (selectedItems.length > 0) {
+    for (const si of selectedItems) {
+      // combine with existing data
+      for (const ds in data[si.value]) {
+        if (!dataSet[ds]) {
+          dataSet[ds] = data[si.value][ds];
+        } else {
+          dataSet[ds] = dataSet[ds].map((v, i) => v + data[si.value][ds][i]);
+        }
+      }
+    }
+  } else {
+    dataSet = data.dataCode;
+  }
+
+  return dataSet;
+}
+
+async function updateChart() {
+  const dataSet = dataSetParse();
+
+  // update chart data
+  for (const line in dataSet) {
+    if (line == 'Total') continue;
+
+    //find
+    const found = chart.data.datasets.find((ds) => ds.label == line);
+    if (found) {
+      found.data = dataSet[line];
+      continue;
+    }
+
+    chart.data.datasets.push({
+      label: line,
+      //backgroundColor: data.lines[line].color,
+      //borderColor: data.lines[line].color,
+      data: dataSet[line],
+      fill: true,
+    });
+  }
+
+  chart.update();
+}
+
+async function renderChart() {
   // Line data
   const lineData = {
     labels: data.dates,
     datasets: [],
   };
 
-  for (const line in data.dataCode) {
+  const dataSet = dataSetParse();
+
+  for (const line in dataSet) {
     if (line == 'Total') continue;
     lineData.datasets.push({
       label: line,
       //backgroundColor: data.lines[line].color,
       //borderColor: data.lines[line].color,
-      data: data.dataCode[line],
+      data: dataSet[line],
       fill: true,
     });
   }
@@ -29,6 +85,7 @@ async function renderChart(data) {
     data: lineData,
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         title: {
           display: true,
@@ -76,8 +133,18 @@ async function renderChart(data) {
     },
   };
 
-  var chart = new Chart(ctx, config);
+  chart = new Chart(ctx, config);
 }
 
-// fetch dist/results.json
-fetch('results.json').then(renderChart);
+// wait for page to finish render
+document.addEventListener('DOMContentLoaded', () => {
+  // fetch dist/results.json
+  fetch('results.json').then(setData).then(renderChart);
+
+  const options = document.querySelectorAll('#chart-options input');
+  options.forEach((option) => {
+    option.addEventListener('change', (e) => {
+      updateChart();
+    });
+  });
+});

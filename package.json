@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "parse": "pnpx ts-node parse.ts",
-    "start": "pnpx http-server dist -p 8080"
+    "start": "pnpx http-server dist -p 8080",
+    "start:dev": "pnpx http-server -p 8080"
   },
   "author": "",
   "license": "MIT",
