@@ -11,6 +11,9 @@ dependencies:
   '@types/node':
     specifier: ^20.8.3
     version: 20.8.3
+  dayjs:
+    specifier: ^1.11.10
+    version: 1.11.10
   http-server:
     specifier: ^14.1.1
     version: 14.1.1
@@ -234,6 +237,10 @@ packages:
   /corser@2.0.1:
     resolution: {integrity: sha512-utCYNzRSQIZNPIcGZdQc92UVJYAhtGAteCFg0yRaFm8f0P+CPtyGyHXJcGXnffjCybUCEx3FQ2G7U3/o9eIkVQ==}
     engines: {node: '>= 0.4.0'}
+    dev: false
+
+  /dayjs@1.11.10:
+    resolution: {integrity: sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==}
     dev: false
 
   /debug@3.2.7:

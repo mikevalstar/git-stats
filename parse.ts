@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import fs from 'fs';
 import path from 'path';
 
@@ -43,12 +44,19 @@ files.sort().reverse();
 // loop through files and get last file for each date
 // file format is: 2023-06-04T12:04:27-7e42aebc55d6689fb9f5b1cd09804cc82fad41dd.json
 
+const firstRecord = files[files.length - 1]!.split('T')[0];
+const lastRecord = files[0]!.split('T')[0];
+const dateCount: Record<string, number> = {};
+
 const filesByDate = new Map<string, string>();
 for (const file of files) {
   const date = file.split('T')[0];
   if (!date) {
     continue;
   }
+
+  // for commit graph
+  dateCount[date] = (dateCount[date] || 0) + 1;
 
   const existing = filesByDate.get(date);
   if (!existing) {
@@ -59,6 +67,7 @@ for (const file of files) {
 const fileListReduced = Array.from(filesByDate.values());
 fileListReduced.sort();
 
+// Output Top Chart
 const out = {
   languages: [],
   timeseries: [],
@@ -121,6 +130,36 @@ for (const rec of out.timeseries) {
 // output the output file
 const outFile = path.join(outDir, 'results.json');
 fs.writeFileSync(outFile, JSON.stringify(out, null, 2));
+
+// output the commit graph
+const commitGraph = {
+  dates: [] as Array<string>,
+  data: [] as Array<{ x: number; y: number; v: number }>,
+};
+
+const start = dayjs(firstRecord).day(0); // sunday start
+const end = dayjs(lastRecord).day(6); // saturday end
+
+// walk every day between start and end
+let current = start.clone();
+let col = 0;
+while (current.isBefore(end)) {
+  const date = current.format('YYYY-MM-DD');
+  if (current.day() === 0) {
+    commitGraph.dates.push(date);
+    col += 1;
+  }
+  commitGraph.data.push({
+    v: dateCount[date] || 0,
+    x: col,
+    y: current.day(),
+  });
+  current = current.add(1, 'day');
+}
+
+const commitGraphFile = path.join(outDir, 'commits.json');
+fs.writeFileSync(commitGraphFile, JSON.stringify(commitGraph, null, 2));
+
 //force copy stats.js and index.html into folder
 fs.copyFileSync(
   path.join(__dirname, 'stats.js'),

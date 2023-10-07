@@ -4,6 +4,13 @@ Quickly generate a git stats page that shows:
 
 - Lines of code over time by file type
 - Lines of comments over time by file type
+- commit graph over time
+
+## Requirements
+
+- Node 20+
+- pnpm
+- [Tokei](https://github.com/XAMPPRocky/tokei)
 
 ## Usage
 

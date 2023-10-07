@@ -1,12 +1,19 @@
 // runs in browser
 
 var ctx = document.getElementById('chart').getContext('2d');
+var ctxMatrix = document.getElementById('matrix').getContext('2d');
 
 let data = null;
 let chart = null;
+let matrixData = null;
+let matrixChart = null;
 
 async function setData(incoming) {
   data = await incoming.json();
+}
+
+async function setMatrixData(incoming) {
+  matrixData = await incoming.json();
 }
 
 function dataSetParse() {
@@ -136,10 +143,86 @@ async function renderChart() {
   chart = new Chart(ctx, config);
 }
 
+async function renderMatrix() {
+  const config = {
+    type: 'matrix',
+    data: {
+      labels: matrixData.dates,
+      datasets: [
+        {
+          label: 'Commit Matrix',
+          data: matrixData.data,
+          backgroundColor(context) {
+            const value = context.dataset.data[context.dataIndex].v;
+            const alpha = (value + 2) / 40;
+            return Chart.helpers.color('green').alpha(alpha).rgbString();
+          },
+          borderColor(context) {
+            const value = context.dataset.data[context.dataIndex].v;
+            const alpha = (value + 2) / 40;
+            return Chart.helpers.color('darkgreen').alpha(alpha).rgbString();
+          },
+          borderWidth: 1,
+          width: ({ chart }) =>
+            (chart.chartArea || {}).width / chart.scales.x.ticks.length - 1,
+          height: ({ chart }) => (chart.chartArea || {}).height / 7 - 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: false,
+        tooltip: {
+          callbacks: {
+            title() {
+              return '';
+            },
+            label(context) {
+              const v = context.dataset.data[context.dataIndex];
+              return ['Commits: ' + v.v];
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            stepSize: 1,
+            callback: (val, x, z) => {
+              console.log(val, x, z);
+              return dayjs(matrixData.dates[x]).format('MMM DD');
+            },
+          },
+          grid: {
+            display: false,
+          },
+        },
+        y: {
+          offset: true,
+          ticks: {
+            stepSize: 1,
+            callback: (val, x, z) => {
+              return dayjs().day(x).format('ddd');
+            },
+          },
+          grid: {
+            display: false,
+          },
+        },
+      },
+    },
+  };
+
+  chart = new Chart(ctxMatrix, config);
+}
+
 // wait for page to finish render
 document.addEventListener('DOMContentLoaded', () => {
   // fetch dist/results.json
   fetch('results.json').then(setData).then(renderChart);
+  fetch('commits.json').then(setMatrixData).then(renderMatrix);
 
   const options = document.querySelectorAll('#chart-options input');
   options.forEach((option) => {
